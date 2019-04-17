@@ -4,6 +4,11 @@ const gravatar = require("gravatar");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const keys = require("../../config/keys");
+const passport = require('passport');
+
+// Load input validation
+const validateRegisterInput = require('../../validation/register')
+const validateLoginInput = require('../../validation/login')
 
 // Load User model
 const User = require("../../models/User");
@@ -17,9 +22,17 @@ router.get("/test", (req, res) => res.json({ msg: "Users Works" }));
 //@desc     Register users route
 //@access    Public
 router.post("/register", (req, res) => {
+
+  const { errors, isValid } = validateRegisterInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors)
+  }
+
   User.findOne({ email: req.body.email }).then(user => {
     if (user) {
-      return res.status(400).json({ email: "User already exists" });
+      errors.email = "User already exists"
+      return res.status(400).json(errors);
     } else {
       const avatar = gravatar.url(req.body.email, {
         s: "200",
@@ -35,7 +48,7 @@ router.post("/register", (req, res) => {
 
       bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(newUser.password, salt, (err, hash) => {
-          if (err) throw err;
+          if (err) { console.log(err) };
           newUser.password = hash;
           newUser
             .save()
@@ -52,6 +65,13 @@ router.post("/register", (req, res) => {
 //@access    Public
 
 router.post("/login", (req, res) => {
+  const { errors, isValid } = validateLoginInput(req.body);
+
+  if (!isValid) {
+    return res.status(400).json(errors)
+  }
+
+
   const email = req.body.email;
   const password = req.body.password;
 
@@ -61,7 +81,8 @@ router.post("/login", (req, res) => {
     email
   }).then(user => {
     if (!user) {
-      return res.status(404).json({ email: "User not found" });
+      errors.email = "User not found"
+      return res.status(404).json(errors);
     }
     bcrypt.compare(password, user.password).then(isMatch => {
       if (isMatch) {
@@ -79,9 +100,29 @@ router.post("/login", (req, res) => {
           }
         );
       } else {
-        return res.status(400).json({ password: "Password incorrect" });
+        errors.password = "Password incorrect"
+        return res.status(400).json(errors);
       }
     });
   });
+});
+
+//@route    GET api/users/current
+//@desc     Current user from jwt
+//@access    PRivate
+router.get('/current', passport.authenticate('jwt', { session: false }), (req, res) => {
+  res.json(req.user)
+})
+
+//@route    GET api/users/
+//@desc     Get all users
+//@access    Public
+
+router.get('/all', (req, res) => {
+  User.find()
+    .then((users => {
+      return res.json({ users: users })
+    }))
+    .catch((err) => { console.log(err) })
 });
 module.exports = router;

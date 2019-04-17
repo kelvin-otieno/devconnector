@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-
+const passport = require("passport");
 const users = require("./routes/api/users");
 const profile = require("./routes/api/profile");
 const posts = require("./routes/api/posts");
@@ -13,7 +13,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //DB Config
-const db = require("./config/keys").mongoURILocal;
+let db;
+if (process.env.NODE_ENV === 'production') {
+  db = require("./config/keys").mongoURI
+} else {
+  db = require("./config/keys").mongoURILocal
+}
+
 
 //Connect to MongoDB
 
@@ -22,7 +28,11 @@ mongoose
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.error(err));
 
-app.get("/", (req, res) => res.send("Hello!"));
+// Passport middleware
+app.use(passport.initialize());
+
+//Passport config
+require('./config/passport')(passport);
 
 //Use routes
 app.use("/api/users", users);
