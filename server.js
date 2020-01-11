@@ -5,7 +5,7 @@ const passport = require("passport");
 const users = require("./routes/api/users");
 const profile = require("./routes/api/profile");
 const posts = require("./routes/api/posts");
-const path = require('path');
+const path = require("path");
 
 const app = express();
 
@@ -15,12 +15,11 @@ app.use(bodyParser.json());
 
 //DB Config
 let db;
-if (process.env.NODE_ENV === 'production') {
-  db = require("./config/keys").mongoURI
+if (process.env.NODE_ENV === "production") {
+  db = require("./config/keys").mongoURI;
 } else {
-  db = require("./config/keys").mongoURILocal
+  db = require("./config/keys").mongoURI;
 }
-
 
 //Connect to MongoDB
 
@@ -33,7 +32,7 @@ mongoose
 app.use(passport.initialize());
 
 //Passport config
-require('./config/passport')(passport);
+require("./config/passport")(passport);
 
 //Use routes
 app.use("/api/users", users);
@@ -41,12 +40,12 @@ app.use("/api/posts", posts);
 app.use("/api/profile", profile);
 
 //Serve static assets if in production
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   //Set static folder
-  app.use(express.static('client/build'));
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-  })
+  app.use(express.static("client/build"));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
+  });
 }
 
 const port = process.env.PORT || 5000;
