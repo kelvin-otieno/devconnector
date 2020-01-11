@@ -7,6 +7,7 @@ const initialState = {};
 
 const middleware = [thunk];
 
+//new store using extension
 const store = createStore(
   rootReducer,
   initialState,
